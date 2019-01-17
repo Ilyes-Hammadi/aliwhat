@@ -1,12 +1,14 @@
 version: 2
 jobs:
  build:
-   enviroment:
-       TAG: echo $CIRCLE_SHA1 | cut -c 1-8
    machine: true
    steps:
      - checkout
-
+     - run:
+         name: Setyp the commit sha
+         command: | 
+            echo 'export TAG=$(echo $CIRCLE_SHA1 | cut -c 1-8)' >> $BASH_ENV
+            source $BASH_ENV
      - run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
      - run: export TAG=$(echo $CIRCLE_SHA1 | cut -c 1-8)
      - run: docker build -t docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG .
