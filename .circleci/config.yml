@@ -5,12 +5,15 @@ jobs:
    steps:
      - checkout
      - run:
-         name: Setyp the commit sha
+         name: Setup the commit sha
          command: | 
             echo 'export TAG=$(echo $CIRCLE_SHA1 | cut -c 1-8)' >> $BASH_ENV
             source $BASH_ENV
-     - run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-     - run: export TAG=$(echo $CIRCLE_SHA1 | cut -c 1-8)
-     - run: docker build -t docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG .
-     - run: docker push docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG
-
+     - run:
+         name: Build the Image
+         command: docker build -t docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG .
+     - run:
+         name: Login and push to the Registry
+         command: |
+             docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+             docker push docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG
