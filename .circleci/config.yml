@@ -10,7 +10,9 @@ jobs:
          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
      # build the application image
-     - run: docker build -t docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$CIRCLE_SHA1 .
+     - run: | 
+          export TAG=$(echo $CIRCLE_SHA1 | cut -c 1-8)
+          docker build -t docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG .
 
     # deploy the image
-     - run: docker push docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$CIRCLE_SHA1
+     - run: docker push docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG
