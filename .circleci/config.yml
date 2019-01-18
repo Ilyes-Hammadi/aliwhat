@@ -89,8 +89,18 @@ workflows:
         - deploy-prod:
             requires:
                 - hold
+            filters:
+                branches:
+                    only:
+                        - master
+                tags:
+                    only: /^\d+.\d+.\d+$/
         
         # Deploy only when commits to develop branch
         - deploy-staging:
             requires:
                 - build
+            filters:
+                branches:
+                    only:
+                        - develop
