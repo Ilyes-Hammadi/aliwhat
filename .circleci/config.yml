@@ -81,7 +81,7 @@ workflows:
                 branches:
                     ignore: /.*/
                 tags:
-                    only: 1.1.6
+                    only: 1.1.7
         
         - deploy-prod:
             requires:
@@ -90,7 +90,7 @@ workflows:
                 branches:
                     ignore: /.*/
                 tags:
-                    only: 1.1.6
+                    only: 1.1.7
         
         # Deploy only when commits to develop branch
         - deploy-staging:
