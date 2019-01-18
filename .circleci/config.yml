@@ -72,14 +72,12 @@ workflows:
 
         
         # Hold before deploying to production
+        # Production is only triggerd on releases
         - hold:
             type: approval
             requires:
                 - build
             filters:
-                branches:
-                    only:
-                        - master
                 tags:
                     only: /^\d+.\d+/
         - deploy-prod:
