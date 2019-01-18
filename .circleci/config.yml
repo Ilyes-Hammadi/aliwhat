@@ -53,6 +53,8 @@ workflows:
     jobs:
         - unit-test:
             filters:
+                branches:
+                    ignore: /.*/
                 tags:
                     only: 1.1.6
         # - integration-test
