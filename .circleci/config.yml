@@ -51,52 +51,57 @@ workflows:
   version: 2
   workflow:
     jobs:
-        - unit-test
-        - integration-test
-        - stress-test:
-            filters:
-                branches:
-                    only:
-                        - master
-        
-        # Build only for master, develop and stable releases
-        - build:
-            requires:
-                - unit-test
-                - integration-test
-                - stress-test
-            filters:
-                branches:
-                    only:
-                        - master
-                        - develop
-        
-        # Hold before deploying to production
-        # Production is only triggerd on releases
-        - hold:
-            type: approval
-            requires:
-                - build
+        - unit-test:
             filters:
                 branches:
                     ignore: /.*/
                 tags:
-                    only: /^[0-9]+(\.[0-9]+)*$/
+                    only: 1.1.6
+        # - integration-test
+        # - stress-test:
+        #     filters:
+        #         branches:
+        #             only:
+        #                 - master
         
-        - deploy-prod:
-            requires:
-                - hold
-            # filters:
-            #     branches:
-            #         ignore: /.*/
-            #     tags:
-            #         only: /^\d+.\d+.\d+$/
+        # # Build only for master, develop and stable releases
+        # - build:
+        #     requires:
+        #         - unit-test
+        #         - integration-test
+        #         - stress-test
+        #     filters:
+        #         branches:
+        #             only:
+        #                 - master
+        #                 - develop
         
-        # Deploy only when commits to develop branch
-        - deploy-staging:
-            requires:
-                - build
-            filters:
-                branches:
-                    only:
-                        - develop
+        # # Hold before deploying to production
+        # # Production is only triggerd on releases
+        # - hold:
+        #     type: approval
+        #     requires:
+        #         - build
+        #     filters:
+        #         branches:
+        #             ignore: /.*/
+        #         tags:
+        #             only: /^[0-9]+(\.[0-9]+)*$/
+        
+        # - deploy-prod:
+        #     requires:
+        #         - hold
+        #     # filters:
+        #     #     branches:
+        #     #         ignore: /.*/
+        #     #     tags:
+        #     #         only: /^\d+.\d+.\d+$/
+        
+        # # Deploy only when commits to develop branch
+        # - deploy-staging:
+        #     requires:
+        #         - build
+        #     filters:
+        #         branches:
+        #             only:
+        #                 - develop
