@@ -57,6 +57,8 @@ workflows:
                 branches:
                     only:
                         - master
+        
+        # Build only for master, develop and stable releases
         - build:
             requires:
                 - unit-test
@@ -68,7 +70,7 @@ workflows:
                         - master
                         - develop
                 tags:
-                    only: /^\d+.\d+/
+                    only: /^\d+.\d+.\d+$/
 
         
         # Hold before deploying to production
@@ -79,7 +81,8 @@ workflows:
                 - build
             filters:
                 tags:
-                    only: /^\d+.\d+/
+                    only: /^\d+.\d+.\d+$/
+        
         - deploy-prod:
             requires:
                 - hold
@@ -88,7 +91,3 @@ workflows:
         - deploy-staging:
             requires:
                 - build
-            filters:
-                branches:
-                    only:
-                        - develop
