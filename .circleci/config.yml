@@ -36,11 +36,15 @@ jobs:
                     docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
                     docker push docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG
 
-    deploy:
+    deploy-prod:
         machine: true
         steps:
-            - run: echo "Deploy"
+            - run: echo "Deploy to production"
 
+    deploy-staging:
+        machine: true
+        steps:
+            - run: echo "Deploy to staging"
 
 workflows:
   version: 2
@@ -66,6 +70,13 @@ workflows:
                 branches:
                     only:
                         - master
-        - deploy:
+                tags:
+                    only: /^\d+.\d+/
+        - deploy-prod:
             requires:
                 - hold
+        - deploy-staging:
+            filters:
+                branches:
+                    only:
+                        - develop
