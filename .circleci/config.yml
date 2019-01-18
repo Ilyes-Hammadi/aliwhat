@@ -51,6 +51,13 @@ workflows:
         - stress-test
         - build:
             requires:
-            - unit-test
-            - integration-test
-            - stress-test
+                - unit-test
+                - integration-test
+                - stress-test
+        - hold:
+            type: approval
+            requires:
+                - build
+        - deploy:
+            requires:
+                - hold
