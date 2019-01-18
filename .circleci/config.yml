@@ -22,19 +22,20 @@ jobs:
         machine: true
         steps:
             - checkout
-            - run:
-                name: Setup the commit sha
-                command: | 
-                    echo 'export TAG=$(echo $CIRCLE_SHA1 | cut -c 1-8)' >> $BASH_ENV
-                    source $BASH_ENV
-            - run:
-                name: Build the Image
-                command: docker build -t docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG .
-            - run:
-                name: Login and push to the Registry
-                command: |
-                    docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-                    docker push docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG
+            # - run:
+            #     name: Setup the commit sha
+            #     command: | 
+            #         echo 'export TAG=$(echo $CIRCLE_SHA1 | cut -c 1-8)' >> $BASH_ENV
+            #         source $BASH_ENV
+            # - run:
+            #     name: Build the Image
+            #     command: docker build -t docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG .
+            # - run:
+            #     name: Login and push to the Registry
+            #     command: |
+            #         docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+            #         docker push docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG
+            - run: echo "Build the docker image"
 
     deploy-prod:
         machine: true
@@ -69,9 +70,6 @@ workflows:
                     only:
                         - master
                         - develop
-                tags:
-                    only: /^\d+.\d+.\d+$/
-
         
         # Hold before deploying to production
         # Production is only triggerd on releases
@@ -83,16 +81,16 @@ workflows:
                 branches:
                     ignore: /.*/
                 tags:
-                    only: /^\d+.\d+.\d+$/
+                    only: /^[0-9]+(\.[0-9]+)*$/
         
         - deploy-prod:
             requires:
                 - hold
-            filters:
-                branches:
-                    ignore: /.*/
-                tags:
-                    only: /^\d+.\d+.\d+$/
+            # filters:
+            #     branches:
+            #         ignore: /.*/
+            #     tags:
+            #         only: /^\d+.\d+.\d+$/
         
         # Deploy only when commits to develop branch
         - deploy-staging:
