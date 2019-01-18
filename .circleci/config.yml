@@ -76,6 +76,8 @@ workflows:
             requires:
                 - hold
         - deploy-staging:
+            requires:
+                - build
             filters:
                 branches:
                     only:
