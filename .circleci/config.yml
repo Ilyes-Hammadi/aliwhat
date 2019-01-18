@@ -81,8 +81,7 @@ workflows:
                 - build
             filters:
                 branches:
-                    only:
-                        - master
+                    ignore: /.*/
                 tags:
                     only: /^\d+.\d+.\d+$/
         
@@ -91,8 +90,7 @@ workflows:
                 - hold
             filters:
                 branches:
-                    only:
-                        - master
+                    ignore: /.*/
                 tags:
                     only: /^\d+.\d+.\d+$/
         
