@@ -69,9 +69,6 @@ workflows:
                     only:
                         - master
                         - develop
-                tags:
-                    only: /^\d+.\d+.\d+$/
-
         
         # Hold before deploying to production
         # Production is only triggerd on releases
@@ -83,16 +80,16 @@ workflows:
                 branches:
                     ignore: /.*/
                 tags:
-                    only: /^\d+.\d+.\d+$/
+                    only: /^v[0-9]+(\.[0-9]+)*$/
         
         - deploy-prod:
             requires:
                 - hold
-            filters:
-                branches:
-                    ignore: /.*/
-                tags:
-                    only: /^\d+.\d+.\d+$/
+            # filters:
+            #     branches:
+            #         ignore: /.*/
+            #     tags:
+            #         only: /^\d+.\d+.\d+$/
         
         # Deploy only when commits to develop branch
         - deploy-staging:
