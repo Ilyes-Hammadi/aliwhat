@@ -51,13 +51,24 @@ workflows:
   version: 2
   workflow:
     jobs:
-        - unit-test
-        - integration-test
+        - unit-test:
+            filters:
+                tags:
+                    only: 1.1.8
+
+        - integration-test:
+            filters:
+                tags:
+                    only: 1.1.8
+
         - stress-test:
             filters:
                 branches:
                     only:
                         - master
+                tags:
+                    only: 1.1.8
+
         
         # Build only for master, develop and stable releases
         - build:
@@ -70,6 +81,8 @@ workflows:
                     only:
                         - master
                         - develop
+                tags:
+                    only: 1.1.8
         
         # Hold before deploying to production
         # Production is only triggerd on releases
@@ -81,7 +94,7 @@ workflows:
                 branches:
                     ignore: /.*/
                 tags:
-                    only: 1.1.7
+                    only: 1.1.8
         
         - deploy-prod:
             requires:
@@ -90,7 +103,7 @@ workflows:
                 branches:
                     ignore: /.*/
                 tags:
-                    only: 1.1.7
+                    only: 1.1.8
         
         # Deploy only when commits to develop branch
         - deploy-staging:
