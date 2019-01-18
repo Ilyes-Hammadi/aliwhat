@@ -48,7 +48,11 @@ workflows:
     jobs:
         - unit-test
         - integration-test
-        - stress-test
+        - stress-test:
+            filters:
+                branches:
+                    only:
+                        - master
         - build:
             requires:
                 - unit-test
@@ -58,6 +62,10 @@ workflows:
             type: approval
             requires:
                 - build
+            filters:
+                branches:
+                    only:
+                        - master
         - deploy:
             requires:
                 - hold
