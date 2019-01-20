@@ -64,7 +64,7 @@ jobs:
                 name: Deploy to Kubernetes
                 command: bash deployment/scripts/helm_upgrade.sh
     
-    deploy-staging:
+    deploy-prod:
         docker:
             - image: google/cloud-sdk
         environment:
@@ -72,7 +72,7 @@ jobs:
             GOOGLE_PROJECT_ID: "ilyes-sandbox"
             GOOGLE_COMPUTE_ZONE: "europe-west4-a"
             GOOGLE_CLUSTER_NAME: "sandbox"
-            KUBERNETES_NAMESPACE: "aliwhat-staging"
+            KUBERNETES_NAMESPACE: "aliwhat-prod"
         steps:
             - checkout
             - run:
