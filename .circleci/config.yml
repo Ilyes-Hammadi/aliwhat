@@ -129,7 +129,7 @@ workflows:
                 - stress-tests
             filters:
                 branches:
-                    ignore: /.*/
+                    ignore:
                         - master
                         - develop
                 tags:
