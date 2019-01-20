@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
 
     unit-tests:
@@ -23,7 +23,7 @@ jobs:
         steps:
             - checkout
             - run:
-                name: Build the Image
+                name: Build the test image
                 command: docker build -t aliwhat .
     
     
@@ -35,38 +35,34 @@ jobs:
             GOOGLE_PROJECT_ID: "ilyes-sandbox"
             GOOGLE_COMPUTE_ZONE: "europe-west4-a"
             GOOGLE_CLUSTER_NAME: "sandbox"
+            KUBERNETES_NAMESPACE: "aliwhat-staging"
         steps:
             - checkout
+            - run:
+                name: Setup the TAG env var
+                command: |
+                    echo 'export TAG=$(echo $CIRCLE_SHA1 | cut -c 1-8)' >> $BASH_ENV
+                    source $BASH_ENV
             - run: 
                 name: Setup Google Cloud SDK
-                command: |
-                    apt-get install -qq -y gettext
-                    echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-                    gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-                    gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-                    gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
-                    gcloud --quiet container clusters get-credentials ${GOOGLE_CLUSTER_NAME}
+                command: bash deployment/scripts/gcloud_setup.sh 
+                    
             - setup_remote_docker
             - run: 
-                name: Docker build and push
-                command: |
-                    docker build \
-                    --build-arg COMMIT_REF=${CIRCLE_SHA1} \
-                    --build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
-                    -t ${PROJECT_NAME} .
-                    docker tag ${PROJECT_NAME} eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_SHA1}
-                    gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
-                    docker push eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_SHA1}
+                name: Docker build
+                command: bash deployment/scripts/docker_build.sh
+            
+            - run: 
+                name: Docker push
+                command: bash deployment/scripts/docker_push.sh
             
             - run:
                 name: Install and configure Helm
-                command: |
-                    curl https://raw.githubusercontent.com/kubernetes/helm/v2.12.2/scripts/get | bash
-                    helm init -c
+                command: bash deployment/scripts/install_helm.sh
             
             - run: 
                 name: Deploy to Kubernetes
-                command: helm upgrade aliwhat aliwhat  --set image.tag=${CIRCLE_SHA1}
+                command: bash deployment/scripts/helm_upgrade.sh
     
     deploy-prod:
         docker:
@@ -76,38 +72,34 @@ jobs:
             GOOGLE_PROJECT_ID: "ilyes-sandbox"
             GOOGLE_COMPUTE_ZONE: "europe-west4-a"
             GOOGLE_CLUSTER_NAME: "sandbox"
+            KUBERNETES_NAMESPACE: "aliwhat-prod"
         steps:
             - checkout
+            - run:
+                name: Setup the TAG env var
+                command: |
+                    echo 'export TAG=${CIRCLE_TAG}' >> $BASH_ENV
+                    source $BASH_ENV
             - run: 
                 name: Setup Google Cloud SDK
-                command: |
-                    apt-get install -qq -y gettext
-                    echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-                    gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-                    gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-                    gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
-                    gcloud --quiet container clusters get-credentials ${GOOGLE_CLUSTER_NAME}
+                command: bash deployment/scripts/gcloud_setup.sh 
+                    
             - setup_remote_docker
             - run: 
-                name: Docker build and push
-                command: |
-                    docker build \
-                    --build-arg COMMIT_REF=${CIRCLE_TAG} \
-                    --build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
-                    -t ${PROJECT_NAME} .
-                    docker tag ${PROJECT_NAME} eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_TAG}
-                    gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
-                    docker push eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_TAG}
+                name: Docker build
+                command: bash deployment/scripts/docker_build.sh
+            
+            - run: 
+                name: Docker push
+                command: bash deployment/scripts/docker_push.sh
             
             - run:
                 name: Install and configure Helm
-                command: |
-                    curl https://raw.githubusercontent.com/kubernetes/helm/v2.12.2/scripts/get | bash
-                    helm init -c
+                command: bash deployment/scripts/install_helm.sh
             
             - run: 
                 name: Deploy to Kubernetes
-                command: helm upgrade aliwhat aliwhat  --set image.tag=${CIRCLE_TAG}
+                command: bash deployment/scripts/helm_upgrade.sh
 
 workflows:
   version: 2
@@ -132,7 +124,7 @@ workflows:
                     only: /^[0-9]+.[0-9]+.[0-9]+$/
 
         
-        # Build only for master, develop and stable releases
+        # Test if building the docker image is safe
         - build-test:
             requires:
                 - unit-tests
@@ -140,11 +132,11 @@ workflows:
                 - stress-tests
             filters:
                 branches:
-                    only:
+                    ignore:
                         - master
                         - develop
                 tags:
-                    only: /^[0-9]+.[0-9]+.[0-9]+$/
+                    ignore: /^[0-9]+.[0-9]+.[0-9]+$/
         
         # Hold before deploying to production
         # Production is only triggerd on releases
