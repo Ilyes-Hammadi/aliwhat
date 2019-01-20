@@ -38,6 +38,11 @@ jobs:
             KUBERNETES_NAMESPACE: "aliwhat-staging"
         steps:
             - checkout
+            - run:
+                name: Setup the TAG env var
+                command: |
+                    echo 'export TAG=$(echo $CIRCLE_SHA1 | cut -c 1-8)' >> $BASH_ENV
+                    source $BASH_ENV
             - run: 
                 name: Setup Google Cloud SDK
                 command: bash deployment/scripts/gcloud_setup.sh 
@@ -45,11 +50,11 @@ jobs:
             - setup_remote_docker
             - run: 
                 name: Docker build
-                command: bash deployment/scripts/docker_build.sh ${CIRCLE_SHA1}
+                command: bash deployment/scripts/docker_build.sh
             
             - run: 
                 name: Docker push
-                command: bash deployment/scripts/docker_push.sh ${CIRCLE_SHA1}
+                command: bash deployment/scripts/docker_push.sh
             
             - run:
                 name: Install and configure Helm
@@ -57,9 +62,9 @@ jobs:
             
             - run: 
                 name: Deploy to Kubernetes
-                command: bash deployment/scripts/helm_upgrade.sh ${CIRCLE_SHA1}
+                command: bash deployment/scripts/helm_upgrade.sh
     
-    deploy-prod:
+    deploy-staging:
         docker:
             - image: google/cloud-sdk
         environment:
@@ -67,21 +72,26 @@ jobs:
             GOOGLE_PROJECT_ID: "ilyes-sandbox"
             GOOGLE_COMPUTE_ZONE: "europe-west4-a"
             GOOGLE_CLUSTER_NAME: "sandbox"
-            KUBERNETES_NAMESPACE: "aliwhat-prod"
+            KUBERNETES_NAMESPACE: "aliwhat-staging"
         steps:
             - checkout
+            - run:
+                name: Setup the TAG env var
+                command: |
+                    echo 'export TAG=${CIRCLE_TAG}' >> $BASH_ENV
+                    source $BASH_ENV
             - run: 
                 name: Setup Google Cloud SDK
-                command: bash deployment/scripts/gcloud_setup.sh
+                command: bash deployment/scripts/gcloud_setup.sh 
                     
             - setup_remote_docker
             - run: 
                 name: Docker build
-                command: bash deployment/scripts/docker_build.sh ${CIRCLE_TAG}
+                command: bash deployment/scripts/docker_build.sh
             
             - run: 
                 name: Docker push
-                command: bash deployment/scripts/docker_push.sh ${CIRCLE_TAG}
+                command: bash deployment/scripts/docker_push.sh
             
             - run:
                 name: Install and configure Helm
@@ -89,7 +99,7 @@ jobs:
             
             - run: 
                 name: Deploy to Kubernetes
-                command: bash deployment/scripts/helm_upgrade.sh ${CIRCLE_TAG}
+                command: bash deployment/scripts/helm_upgrade.sh
 
 workflows:
   version: 2
