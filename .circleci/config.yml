@@ -23,20 +23,10 @@ jobs:
         steps:
             - checkout
             - run:
-                name: Setup the commit sha
-                command: | 
-                    echo 'export TAG=$(echo $CIRCLE_SHA1 | cut -c 1-8)' >> $BASH_ENV
-                    source $BASH_ENV
-            - run:
                 name: Build the Image
-                command: docker build -t docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG .
-            - run:
-                name: Login and push to the Registry
-                command: |
-                    docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-                    docker push docker.io/ilyeshammadi/aliwhat:$CIRCLE_BRANCH-$TAG
-            - run: echo "Build the docker image"
-
+                command: docker build -t aliwhat .
+    
+    
     deploy-prod:
         machine: true
         steps:
@@ -62,23 +52,19 @@ jobs:
                     gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
                     gcloud --quiet container clusters get-credentials ${GOOGLE_CLUSTER_NAME}
             - setup_remote_docker
-            # - run: 
-            #     name: Docker build and push
-            #     command: |
-            #         docker build \
-            #         --build-arg COMMIT_REF=${CIRCLE_SHA1} \
-            #         --build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
-            #         -t ${PROJECT_NAME} .
-            #         docker tag ${PROJECT_NAME} eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_SHA1}
-            #         gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
-            #         docker push eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_SHA1}
+            - run: 
+                name: Docker build and push
+                command: |
+                    docker build \
+                    --build-arg COMMIT_REF=${CIRCLE_SHA1} \
+                    --build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
+                    -t ${PROJECT_NAME} .
+                    docker tag ${PROJECT_NAME} eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_SHA1}
+                    gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
+                    docker push eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_SHA1}
             - run: 
                 name: Deploy to Kubernetes
-                command: |
-                    # envsubst < ${HOME}/project/k8s.yml > ${HOME}/patched_k8s.yml
-                    # kubectl apply -f ${HOME}/patched_k8s.yml
-                    # kubectl rollout status deployment/${PROJECT_NAME}
-                    kubectl run nginx --image=nginx:alpine --port=80 --namespace=default
+                command: helm upgrade aliwhat aliwhat  --set image.tag=${CIRCLE_SHA1}
 
 workflows:
   version: 2
