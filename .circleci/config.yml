@@ -1,24 +1,24 @@
 version: 2
 jobs:
 
-    unit-test:
+    unit-tests:
         machine: true
         steps:
             - checkout
             - run: echo "Running unit tests"
 
-    integration-test:
+    integration-tests:
         machine: true
         steps:
             - checkout
             - run: echo "Running integration tests"
 
-    stress-test:
+    stress-tests:
         machine: true
         steps:
             - checkout
             - run: echo "Running stress tests"
-    build:
+    build-test:
         machine: true
         steps:
             - checkout
@@ -27,11 +27,6 @@ jobs:
                 command: docker build -t aliwhat .
     
     
-    deploy-prod:
-        machine: true
-        steps:
-            - run: echo "Deploy to production"
-
     deploy-staging:
         docker:
             - image: google/cloud-sdk
@@ -72,22 +67,63 @@ jobs:
             - run: 
                 name: Deploy to Kubernetes
                 command: helm upgrade aliwhat aliwhat  --set image.tag=${CIRCLE_SHA1}
+    
+    deploy-prod:
+        docker:
+            - image: google/cloud-sdk
+        environment:
+            PROJECT_NAME: "aliwhat"
+            GOOGLE_PROJECT_ID: "ilyes-sandbox"
+            GOOGLE_COMPUTE_ZONE: "europe-west4-a"
+            GOOGLE_CLUSTER_NAME: "sandbox"
+        steps:
+            - checkout
+            - run: 
+                name: Setup Google Cloud SDK
+                command: |
+                    apt-get install -qq -y gettext
+                    echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+                    gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
+                    gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+                    gcloud --quiet config set compute/zone ${GOOGLE_COMPUTE_ZONE}
+                    gcloud --quiet container clusters get-credentials ${GOOGLE_CLUSTER_NAME}
+            - setup_remote_docker
+            - run: 
+                name: Docker build and push
+                command: |
+                    docker build \
+                    --build-arg COMMIT_REF=${CIRCLE_TAG} \
+                    --build-arg BUILD_DATE=`date -u +”%Y-%m-%dT%H:%M:%SZ”` \
+                    -t ${PROJECT_NAME} .
+                    docker tag ${PROJECT_NAME} eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_TAG}
+                    gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://eu.gcr.io
+                    docker push eu.gcr.io/${GOOGLE_PROJECT_ID}/${PROJECT_NAME}:${CIRCLE_TAG}
+            
+            - run:
+                name: Install and configure Helm
+                command: |
+                    curl https://raw.githubusercontent.com/kubernetes/helm/v2.12.2/scripts/get | bash
+                    helm init -c
+            
+            - run: 
+                name: Deploy to Kubernetes
+                command: helm upgrade aliwhat aliwhat  --set image.tag=${CIRCLE_TAG}
 
 workflows:
   version: 2
   workflow:
     jobs:
-        - unit-test:
+        - unit-tests:
             filters:
                 tags:
                     only: /^[0-9]+.[0-9]+.[0-9]+$/
 
-        - integration-test:
+        - integration-tests:
             filters:
                 tags:
                     only: /^[0-9]+.[0-9]+.[0-9]+$/
 
-        - stress-test:
+        - stress-tests:
             filters:
                 branches:
                     only:
@@ -97,11 +133,11 @@ workflows:
 
         
         # Build only for master, develop and stable releases
-        - build:
+        - build-test:
             requires:
-                - unit-test
-                - integration-test
-                - stress-test
+                - unit-tests
+                - integration-tests
+                - stress-tests
             filters:
                 branches:
                     only:
@@ -115,7 +151,9 @@ workflows:
         - hold:
             type: approval
             requires:
-                - build
+                - unit-tests
+                - integration-tests
+                - stress-tests
             filters:
                 branches:
                     ignore: /.*/
@@ -134,9 +172,9 @@ workflows:
         # Deploy to staging when new commits on develop
         - deploy-staging:
             requires:
-                - unit-test
-                - integration-test
-                - stress-test
+                - unit-tests
+                - integration-tests
+                - stress-tests
             filters:
                 branches:
                     only:
