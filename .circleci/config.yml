@@ -36,6 +36,7 @@ jobs:
             GOOGLE_COMPUTE_ZONE: "europe-west4-a"
             GOOGLE_CLUSTER_NAME: "sandbox"
             KUBERNETES_NAMESPACE: "aliwhat-staging"
+            HELM_RELEASE: "aliwhat-staging"
         steps:
             - checkout
             - run:
@@ -73,6 +74,7 @@ jobs:
             GOOGLE_COMPUTE_ZONE: "europe-west4-a"
             GOOGLE_CLUSTER_NAME: "sandbox"
             KUBERNETES_NAMESPACE: "aliwhat-prod"
+            HELM_RELEASE: "aliwhat-prod"
         steps:
             - checkout
             - run:
