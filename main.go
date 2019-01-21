@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 )
 
 func main() {
+	panic(errors.New("Ops"))
 	http.HandleFunc("/", foo)
 	http.ListenAndServe(":3000", nil)
 }
