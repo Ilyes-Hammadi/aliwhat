@@ -1,5 +1,10 @@
 # AliWhat
+A Simple example project that demonstrate the usage of CI/CD pipeline.
 
-master: [![CircleCI](https://circleci.com/gh/Ilyes-Hammadi/aliwhat/tree/master.svg?style=svg)](https://circleci.com/gh/Ilyes-Hammadi/aliwhat/tree/master)
+### Technolgies used
+- Kubernetes (GKE)
+- Docker
+- Helm
+- Circle CI
+- Go Lang
 
-develop: [![CircleCI](https://circleci.com/gh/Ilyes-Hammadi/aliwhat/tree/develop.svg?style=svg)](https://circleci.com/gh/Ilyes-Hammadi/aliwhat/tree/develop)
